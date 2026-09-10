@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#123B5D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meu Ponto">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Meu Ponto</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#eef3f7;font-family:Arial,sans-serif;color:#17324a}
@@ -121,5 +128,10 @@ function exportar(){
 }
 function limparHistorico(){if(confirm('Apagar todos os registros deste celular?')){dados=[];localStorage.removeItem(KEY);render()}}
 render();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
 </script>
 </body></html>
