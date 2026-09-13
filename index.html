@@ -23,13 +23,22 @@ label{font-size:12px;font-weight:700;display:block;margin:8px 0 5px}input,select
 </style>
 </head>
 <body>
-<header><main style="padding:0"><h1>📋 Meu Ponto</h1><div class="sub">Controle simples • funciona no celular • sem macro</div></main></header>
+<header><main style="padding:0"><h1>📋 Meu Ponto</h1><div class="sub">Controle simples • funciona no celular • sem macro</div><div id="statusRede" style="margin-top:8px;font-size:12px;font-weight:700">🟢 ONLINE</div></main></header>
 <main>
 <div class="card">
 <label>FUNCIONÁRIO</label><input id="nome" placeholder="Digite o nome">
 <label>MATRÍCULA</label><input id="mat" placeholder="Digite a matrícula">
 <div class="row"><div><label>DATA</label><input id="data" type="date"></div><div><label>JORNADA</label><input value="08:48" disabled></div></div>
 <label>TURNO</label><div class="turnos"><button class="turno" id="manha" onclick="setTurno('manha')">☀️ MANHÃ<br><small>07:00</small></button><button class="turno" id="tarde" onclick="setTurno('tarde')">🌙 TARDE<br><small>16:49</small></button></div>
+
+<div style="margin-top:12px;padding:12px;border:2px solid #dce7ef;border-radius:14px;background:#f8fbfd">
+  <div style="font-size:13px;font-weight:700;margin-bottom:8px">REGISTRO RÁPIDO DO TURNO</div>
+  <div class="row">
+    <button type="button" class="primary" style="margin-top:0" onclick="registrarEntradaAgora()">🟢 ENTRADA DO TURNO</button>
+    <button type="button" class="secondary" style="margin-top:0" onclick="registrarSaidaAgora()">🔴 SAÍDA DO TURNO</button>
+  </div>
+  <div id="statusTurno" class="muted" style="margin-top:8px">Nenhum turno em andamento.</div>
+</div>
 <div class="row"><div><label>ENTRADA</label><input id="entrada" type="time"></div><div><label>SAÍDA FINAL</label><input id="saida" type="time"></div></div>
 <div class="row"><div><label>SAÍDA INTERVALO</label><input id="almoco" type="time"></div><div><label>RETORNO</label><input id="retorno" type="time"></div></div>
 <label>OBSERVAÇÃO</label><input id="obs" placeholder="Opcional">
@@ -48,7 +57,75 @@ $('entrada').addEventListener('change',()=>{let v=$('entrada').value;if(v==='07:
 function mins(v){if(!v)return null;let [h,m]=v.split(':').map(Number);return h*60+m}function fmt(n){n=Math.max(0,Math.round(n));let h=Math.floor(n/60),m=n%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')}function duracao(a,b){let x=mins(a),y=mins(b);if(x==null||y==null)return null;if(y<x)y+=1440;return y-x}
 function calcular(){let e=$('entrada').value,s=$('saida').value,al=$('almoco').value,re=$('retorno').value;if(!e||!s||!al||!re){$('horas').textContent='--:--';$('extra').textContent='--:--';return}let total=duracao(e,al)+duracao(re,s),extra=Math.max(0,total-528);$('horas').textContent=fmt(total);$('extra').textContent=fmt(extra)}
 function limparCampos(){['entrada','saida','almoco','retorno','obs'].forEach(id=>$(id).value='');turno='';$('manha').classList.remove('ativo');$('tarde').classList.remove('ativo');$('horas').textContent='--:--';$('extra').textContent='--:--'}
-function registrar(){let nome=$('nome').value.trim(),mat=$('mat').value.trim(),data=$('data').value,e=$('entrada').value,s=$('saida').value;if(!nome||!mat||!data||!e||!s){alert('Preencha funcionário, matrícula, data, entrada e saída final.');return}let al=$('almoco').value,re=$('retorno').value;if(!al||!re){alert('Preencha saída e retorno do intervalo.');return}let total=duracao(e,al)+duracao(re,s),extra=Math.max(0,total-528);dados.push({nome,mat,data,turno:turno||'Manual',e,al,re,s,total,extra,obs:$('obs').value.trim()});localStorage.setItem(KEY,JSON.stringify(dados));render();limparCampos();alert('Ponto registrado com sucesso!')}
+function registrar(){let nome=$('nome').value.trim(),mat=$('mat').value.trim(),data=$('data').value,e=$('entrada').value,s=$('saida').value;if(!nome||!mat||!data||!e||!s){alert('Preencha funcionário, matrícula, data, entrada e saída final.');return}let al=$('almoco').value,re=$('retorno').value;if(!al||!re){alert('Preencha saída e retorno do intervalo.');return}let total=duracao(e,al)+duracao(re,s),extra=Math.max(0,total-528);dados.push({nome,mat,data,turno:turno||'Manual',e,al,re,s,total,extra,obs:$('obs').value.trim()});localStorage.setItem(KEY,JSON.stringify(dados));
+const PENDING_KEY='meu_ponto_turno_aberto_v1';
+
+function atualizarStatusRede(){
+  const el=$('statusRede');
+  if(!el)return;
+  el.textContent=navigator.onLine?'🟢 ONLINE':'🔴 OFFLINE — dados salvos neste celular';
+}
+window.addEventListener('online',atualizarStatusRede);
+window.addEventListener('offline',atualizarStatusRede);
+
+function turnoAberto(){
+  try{return JSON.parse(localStorage.getItem(PENDING_KEY)||'null')}catch(e){return null}
+}
+
+function atualizarStatusTurno(){
+  const p=turnoAberto(), el=$('statusTurno');
+  if(!el)return;
+  if(p){
+    el.textContent='Turno em andamento • Entrada registrada às '+p.e+' • '+(p.turno==='manha'?'MANHÃ':'TARDE');
+  }else{
+    el.textContent='Nenhum turno em andamento.';
+  }
+}
+
+function registrarEntradaAgora(){
+  const nome=$('nome').value.trim(), mat=$('mat').value.trim(), data=$('data').value;
+  if(!nome||!mat||!data){alert('Preencha funcionário, matrícula e data antes de registrar a entrada.');return}
+  if(turnoAberto()){alert('Já existe um turno em andamento neste celular. Registre a saída antes de iniciar outro.');return}
+  if(!turno){
+    // Infer the shift from current time only when it is clearly within one of the configured start windows.
+    const agora=new Date(), h=agora.getHours(), m=agora.getMinutes(), total=h*60+m;
+    if(total>=360 && total<12*60) setTurno('manha');
+    else if(total>=15*60 && total<24*60) setTurno('tarde');
+    else {alert('Selecione MANHÃ ou TARDE antes de registrar a entrada.');return}
+  }
+  const agora=new Date(), hh=String(agora.getHours()).padStart(2,'0'), mm=String(agora.getMinutes()).padStart(2,'0');
+  const e=hh+':'+mm;
+  $('entrada').value=e;
+  const p={nome,mat,data,turno,e,al:$('almoco').value,re:$('retorno').value};
+  localStorage.setItem(PENDING_KEY,JSON.stringify(p));
+  atualizarStatusTurno();
+  calcular();
+  alert('Entrada registrada às '+e+'.');
+}
+
+function registrarSaidaAgora(){
+  const p=turnoAberto();
+  if(!p){alert('Nenhuma entrada de turno foi registrada neste celular.');return}
+  const agora=new Date(), hh=String(agora.getHours()).padStart(2,'0'), mm=String(agora.getMinutes()).padStart(2,'0');
+  const s=hh+':'+mm;
+  $('nome').value=p.nome; $('mat').value=p.mat; $('data').value=p.data;
+  $('entrada').value=p.e; $('almoco').value=p.al; $('retorno').value=p.re;
+  $('saida').value=s; turno=p.turno;
+  $('manha').classList.toggle('ativo',turno==='manha');$('tarde').classList.toggle('ativo',turno==='tarde');
+  let total=duracao(p.e,p.al)+duracao(p.re,s);
+  if(p.al==='') total=duracao(p.e,s);
+  let extra=Math.max(0,total-528);
+  dados.push({nome:p.nome,mat:p.mat,data:p.data,turno:turno||'Manual',e:p.e,al:p.al,re:p.re,s,total,extra,obs:''});
+  localStorage.setItem(KEY,JSON.stringify(dados));
+  localStorage.removeItem(PENDING_KEY);
+  render(); atualizarStatusTurno(); limparCampos();
+  alert('Saída registrada às '+s+'. Ponto salvo no histórico.');
+}
+
+atualizarStatusRede();
+atualizarStatusTurno();
+
+render();limparCampos();alert('Ponto registrado com sucesso!')}
 function render(){let tb=$('historico');tb.innerHTML='';dados.slice().reverse().forEach(x=>{let tr=document.createElement('tr');tr.innerHTML=`<td>${x.data.split('-').reverse().join('/')}</td><td>${x.turno}</td><td>${x.e}</td><td>${x.al}–${x.re}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td>`;tb.appendChild(tr)});$('qtd').textContent=dados.length+' registro'+(dados.length===1?'':'s');$('dias').textContent=dados.length;$('totalHoras').textContent=fmt(dados.reduce((a,x)=>a+x.total,0));$('totalExtra').textContent=fmt(dados.reduce((a,x)=>a+x.extra,0))}
 function exportar(){if(!dados.length){alert('Não há registros para exportar.');return}let csv='Data;Funcionário;Matrícula;Turno;Entrada;Saída intervalo;Retorno;Saída;Horas trabalhadas;Hora extra;Observação\n';dados.forEach(x=>csv+=`${x.data};"${x.nome}";"${x.mat}";${x.turno};${x.e};${x.al};${x.re};${x.s};${fmt(x.total)};${fmt(x.extra)};"${x.obs||''}"\n`);let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico_ponto.csv';a.click();URL.revokeObjectURL(a.href)}
 function limparHistorico(){if(confirm('Apagar todos os registros deste celular?')){dados=[];localStorage.removeItem(KEY);render()}}
