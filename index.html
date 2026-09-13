@@ -50,87 +50,117 @@ label{font-size:12px;font-weight:700;display:block;margin:8px 0 5px}input,select
 <div class="card"><b>📊 Resumo</b><div class="row3" style="margin-top:10px;text-align:center"><div><div class="muted">Dias</div><b id="dias">0</b></div><div><div class="muted">Horas</div><b id="totalHoras">00:00</b></div><div><div class="muted">Extras</div><b id="totalExtra">00:00</b></div></div></div>
 </main>
 <script>
-const KEY='meu_ponto_v1';let dados=JSON.parse(localStorage.getItem(KEY)||'[]');let turno='';const $=id=>document.getElementById(id);
-function hoje(){let d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}$('data').value=hoje();
-function setTurno(t){turno=t;$('manha').classList.toggle('ativo',t==='manha');$('tarde').classList.toggle('ativo',t==='tarde');if(t==='manha'){$('entrada').value='07:00';$('almoco').value='11:00';$('retorno').value='12:00'}else{$('entrada').value='16:49';$('almoco').value='19:00';$('retorno').value='20:00'}calcular()}
-$('entrada').addEventListener('change',()=>{let v=$('entrada').value;if(v==='07:00')setTurno('manha');else if(v==='16:49')setTurno('tarde');else calcular()});$('saida').addEventListener('input',calcular);$('almoco').addEventListener('input',calcular);$('retorno').addEventListener('input',calcular);
-function mins(v){if(!v)return null;let [h,m]=v.split(':').map(Number);return h*60+m}function fmt(n){n=Math.max(0,Math.round(n));let h=Math.floor(n/60),m=n%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')}function duracao(a,b){let x=mins(a),y=mins(b);if(x==null||y==null)return null;if(y<x)y+=1440;return y-x}
-function calcular(){let e=$('entrada').value,s=$('saida').value,al=$('almoco').value,re=$('retorno').value;if(!e||!s||!al||!re){$('horas').textContent='--:--';$('extra').textContent='--:--';return}let total=duracao(e,al)+duracao(re,s),extra=Math.max(0,total-528);$('horas').textContent=fmt(total);$('extra').textContent=fmt(extra)}
-function limparCampos(){['entrada','saida','almoco','retorno','obs'].forEach(id=>$(id).value='');turno='';$('manha').classList.remove('ativo');$('tarde').classList.remove('ativo');$('horas').textContent='--:--';$('extra').textContent='--:--'}
-function registrar(){let nome=$('nome').value.trim(),mat=$('mat').value.trim(),data=$('data').value,e=$('entrada').value,s=$('saida').value;if(!nome||!mat||!data||!e||!s){alert('Preencha funcionário, matrícula, data, entrada e saída final.');return}let al=$('almoco').value,re=$('retorno').value;if(!al||!re){alert('Preencha saída e retorno do intervalo.');return}let total=duracao(e,al)+duracao(re,s),extra=Math.max(0,total-528);dados.push({nome,mat,data,turno:turno||'Manual',e,al,re,s,total,extra,obs:$('obs').value.trim()});localStorage.setItem(KEY,JSON.stringify(dados));
-const PENDING_KEY='meu_ponto_turno_aberto_v1';
+const KEY='meu_ponto_v2';
+const PENDING_KEY='meu_ponto_turno_aberto_v2';
+let dados=JSON.parse(localStorage.getItem(KEY)||'[]');
+let turno='';
+const $=id=>document.getElementById(id);
 
+function hoje(){let d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+$('data').value=hoje();
+
+function horaCelular(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function mins(v){if(!v)return null;let [h,m]=v.split(':').map(Number);return h*60+m}
+function fmt(n){n=Math.max(0,Math.round(n));let h=Math.floor(n/60),m=n%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')}
+function duracao(a,b){let x=mins(a),y=mins(b);if(x==null||y==null)return null;if(y<x)y+=1440;return y-x}
+
+function setTurno(t){
+  turno=t;
+  $('manha').classList.toggle('ativo',t==='manha');
+  $('tarde').classList.toggle('ativo',t==='tarde');
+  if(t==='manha'){$('almoco').value='11:00';$('retorno').value='12:00'}
+  else{$('almoco').value='19:00';$('retorno').value='20:00'}
+  calcular();
+}
+
+$('entrada').addEventListener('change',()=>{let v=$('entrada').value;if(v==='07:00')setTurno('manha');else if(v==='16:49')setTurno('tarde');else calcular()});
+$('saida').addEventListener('input',calcular);$('almoco').addEventListener('input',calcular);$('retorno').addEventListener('input',calcular);
+
+function calcular(){
+  let e=$('entrada').value,s=$('saida').value,al=$('almoco').value,re=$('retorno').value;
+  if(!e||!s){$('horas').textContent='--:--';$('extra').textContent='--:--';return}
+  let total;
+  if(al&&re) total=duracao(e,al)+duracao(re,s); else total=duracao(e,s);
+  let extra=Math.max(0,total-528);
+  $('horas').textContent=fmt(total);$('extra').textContent=fmt(extra);
+}
+
+function turnoAberto(){try{return JSON.parse(localStorage.getItem(PENDING_KEY)||'null')}catch(e){return null}}
+function atualizarStatusTurno(){
+  const p=turnoAberto(),el=$('statusTurno'); if(!el)return;
+  if(p) el.textContent='🟢 Turno em andamento • Entrada: '+p.e+' • '+(p.turno==='manha'?'MANHÃ':'TARDE');
+  else el.textContent='Nenhum turno em andamento.';
+}
 function atualizarStatusRede(){
-  const el=$('statusRede');
-  if(!el)return;
+  const el=$('statusRede'); if(!el)return;
   el.textContent=navigator.onLine?'🟢 ONLINE':'🔴 OFFLINE — dados salvos neste celular';
 }
-window.addEventListener('online',atualizarStatusRede);
-window.addEventListener('offline',atualizarStatusRede);
+window.addEventListener('online',atualizarStatusRede);window.addEventListener('offline',atualizarStatusRede);
 
-function turnoAberto(){
-  try{return JSON.parse(localStorage.getItem(PENDING_KEY)||'null')}catch(e){return null}
-}
-
-function atualizarStatusTurno(){
-  const p=turnoAberto(), el=$('statusTurno');
-  if(!el)return;
-  if(p){
-    el.textContent='Turno em andamento • Entrada registrada às '+p.e+' • '+(p.turno==='manha'?'MANHÃ':'TARDE');
-  }else{
-    el.textContent='Nenhum turno em andamento.';
-  }
+function escolherTurnoAutomatico(){
+  if(turno)return true;
+  const t=mins(horaCelular());
+  if(t>=360&&t<720){setTurno('manha');return true}
+  if(t>=900&&t<1440){setTurno('tarde');return true}
+  return false;
 }
 
 function registrarEntradaAgora(){
-  const nome=$('nome').value.trim(), mat=$('mat').value.trim(), data=$('data').value;
+  const nome=$('nome').value.trim(),mat=$('mat').value.trim(),data=$('data').value;
   if(!nome||!mat||!data){alert('Preencha funcionário, matrícula e data antes de registrar a entrada.');return}
-  if(turnoAberto()){alert('Já existe um turno em andamento neste celular. Registre a saída antes de iniciar outro.');return}
-  if(!turno){
-    // Infer the shift from current time only when it is clearly within one of the configured start windows.
-    const agora=new Date(), h=agora.getHours(), m=agora.getMinutes(), total=h*60+m;
-    if(total>=360 && total<12*60) setTurno('manha');
-    else if(total>=15*60 && total<24*60) setTurno('tarde');
-    else {alert('Selecione MANHÃ ou TARDE antes de registrar a entrada.');return}
-  }
-  const agora=new Date(), hh=String(agora.getHours()).padStart(2,'0'), mm=String(agora.getMinutes()).padStart(2,'0');
-  const e=hh+':'+mm;
+  if(turnoAberto()){alert('Já existe uma entrada em andamento. Registre a saída antes de iniciar outro turno.');return}
+  if(!escolherTurnoAutomatico()){alert('Selecione MANHÃ ou TARDE antes de registrar a entrada.');return}
+  const e=horaCelular();
   $('entrada').value=e;
-  const p={nome,mat,data,turno,e,al:$('almoco').value,re:$('retorno').value};
-  localStorage.setItem(PENDING_KEY,JSON.stringify(p));
-  atualizarStatusTurno();
-  calcular();
+  localStorage.setItem(PENDING_KEY,JSON.stringify({nome,mat,data,turno,e,al:$('almoco').value,re:$('retorno').value}));
+  atualizarStatusTurno();calcular();
   alert('Entrada registrada às '+e+'.');
 }
 
 function registrarSaidaAgora(){
   const p=turnoAberto();
-  if(!p){alert('Nenhuma entrada de turno foi registrada neste celular.');return}
-  const agora=new Date(), hh=String(agora.getHours()).padStart(2,'0'), mm=String(agora.getMinutes()).padStart(2,'0');
-  const s=hh+':'+mm;
-  $('nome').value=p.nome; $('mat').value=p.mat; $('data').value=p.data;
-  $('entrada').value=p.e; $('almoco').value=p.al; $('retorno').value=p.re;
-  $('saida').value=s; turno=p.turno;
+  if(!p){alert('Nenhuma entrada de turno foi registrada. Use a ENTRADA DO TURNO primeiro.');return}
+  const s=horaCelular();
+  const nome=p.nome,mat=p.mat,data=p.data,e=p.e,al=p.al,re=p.re;
+  $('nome').value=nome;$('mat').value=mat;$('data').value=data;$('entrada').value=e;$('almoco').value=al;$('retorno').value=re;$('saida').value=s;turno=p.turno;
   $('manha').classList.toggle('ativo',turno==='manha');$('tarde').classList.toggle('ativo',turno==='tarde');
-  let total=duracao(p.e,p.al)+duracao(p.re,s);
-  if(p.al==='') total=duracao(p.e,s);
-  let extra=Math.max(0,total-528);
-  dados.push({nome:p.nome,mat:p.mat,data:p.data,turno:turno||'Manual',e:p.e,al:p.al,re:p.re,s,total,extra,obs:''});
-  localStorage.setItem(KEY,JSON.stringify(dados));
-  localStorage.removeItem(PENDING_KEY);
-  render(); atualizarStatusTurno(); limparCampos();
+  const total=(al&&re)?duracao(e,al)+duracao(re,s):duracao(e,s),extra=Math.max(0,total-528);
+  dados.push({nome,mat,data,turno:turno||'Manual',e,al,re,s,total,extra,obs:''});
+  localStorage.setItem(KEY,JSON.stringify(dados));localStorage.removeItem(PENDING_KEY);
+  render();atualizarStatusTurno();limparCampos();
   alert('Saída registrada às '+s+'. Ponto salvo no histórico.');
 }
 
-atualizarStatusRede();
-atualizarStatusTurno();
+function limparCampos(){
+  ['entrada','saida','almoco','retorno','obs'].forEach(id=>$(id).value='');
+  turno='';$('manha').classList.remove('ativo');$('tarde').classList.remove('ativo');
+  $('horas').textContent='--:--';$('extra').textContent='--:--';
+}
 
-render();limparCampos();alert('Ponto registrado com sucesso!')}
-function render(){let tb=$('historico');tb.innerHTML='';dados.slice().reverse().forEach(x=>{let tr=document.createElement('tr');tr.innerHTML=`<td>${x.data.split('-').reverse().join('/')}</td><td>${x.turno}</td><td>${x.e}</td><td>${x.al}–${x.re}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td>`;tb.appendChild(tr)});$('qtd').textContent=dados.length+' registro'+(dados.length===1?'':'s');$('dias').textContent=dados.length;$('totalHoras').textContent=fmt(dados.reduce((a,x)=>a+x.total,0));$('totalExtra').textContent=fmt(dados.reduce((a,x)=>a+x.extra,0))}
-function exportar(){if(!dados.length){alert('Não há registros para exportar.');return}let csv='Data;Funcionário;Matrícula;Turno;Entrada;Saída intervalo;Retorno;Saída;Horas trabalhadas;Hora extra;Observação\n';dados.forEach(x=>csv+=`${x.data};"${x.nome}";"${x.mat}";${x.turno};${x.e};${x.al};${x.re};${x.s};${fmt(x.total)};${fmt(x.extra)};"${x.obs||''}"\n`);let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico_ponto.csv';a.click();URL.revokeObjectURL(a.href)}
+function registrar(){
+  let nome=$('nome').value.trim(),mat=$('mat').value.trim(),data=$('data').value,e=$('entrada').value,s=$('saida').value;
+  if(!nome||!mat||!data||!e||!s){alert('Preencha funcionário, matrícula, data, entrada e saída final.');return}
+  let al=$('almoco').value,re=$('retorno').value;
+  let total,extra;
+  if(al&&re){total=duracao(e,al)+duracao(re,s)}else{total=duracao(e,s)}
+  extra=Math.max(0,total-528);
+  dados.push({nome,mat,data,turno:turno||'Manual',e,al,re,s,total,extra,obs:$('obs').value.trim()});
+  localStorage.setItem(KEY,JSON.stringify(dados));
+  if(turnoAberto() && turnoAberto().e===e && turnoAberto().data===data) localStorage.removeItem(PENDING_KEY);
+  render();limparCampos();atualizarStatusTurno();
+  alert('Ponto registrado com sucesso!');
+}
+
+function render(){
+  let tb=$('historico');tb.innerHTML='';
+  dados.slice().reverse().forEach(x=>{let tr=document.createElement('tr');tr.innerHTML=`<td>${x.data.split('-').reverse().join('/')}</td><td>${x.turno}</td><td>${x.e}</td><td>${x.al&&x.re?x.al+'–'+x.re:'—'}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td>`;tb.appendChild(tr)});
+  $('qtd').textContent=dados.length+' registro'+(dados.length===1?'':'s');$('dias').textContent=dados.length;$('totalHoras').textContent=fmt(dados.reduce((a,x)=>a+x.total,0));$('totalExtra').textContent=fmt(dados.reduce((a,x)=>a+x.extra,0));
+}
+function exportar(){if(!dados.length){alert('Não há registros para exportar.');return}let csv='Data;Funcionário;Matrícula;Turno;Entrada;Saída intervalo;Retorno;Saída;Horas trabalhadas;Hora extra;Observação\n';dados.forEach(x=>csv+=`${x.data};"${x.nome}";"${x.mat}";${x.turno};${x.e};${x.al||''};${x.re||''};${x.s};${fmt(x.total)};${fmt(x.extra)};"${x.obs||''}"\n`);let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico_ponto.csv';a.click();URL.revokeObjectURL(a.href)}
 function limparHistorico(){if(confirm('Apagar todos os registros deste celular?')){dados=[];localStorage.removeItem(KEY);render()}}
 async function compartilharApp(){const url='https://jcalves1972.github.io/meu-ponto/';try{if(navigator.share){await navigator.share({title:'Meu Ponto',text:'Acesse o aplicativo Meu Ponto:',url})}else if(navigator.clipboard){await navigator.clipboard.writeText(url);alert('Link copiado! Agora é só colar no WhatsApp.')}else{prompt('Copie o link do Meu Ponto:',url)}}catch(e){}}
-render();
+
+atualizarStatusRede();atualizarStatusTurno();render();
 </script>
 <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script>
 </body></html>

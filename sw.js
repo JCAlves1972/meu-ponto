@@ -1,4 +1,4 @@
-const CACHE = "meu-ponto-offline-v4";
+const CACHE = "meu-ponto-offline-v5";
 const CORE = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
