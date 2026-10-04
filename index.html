@@ -20,11 +20,15 @@ label{font-size:12px;font-weight:700;display:block;margin:8px 0 5px}input,select
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.turnos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.turno{border:2px solid #d4dee7;background:#f8fafc;font-weight:700}.turno.ativo{border-color:#1d6fa5;background:#e7f3fb}
 .primary{background:#1d6fa5;color:#fff;border:0;font-weight:700;margin-top:12px}.share{background:#e7f3fb;color:#17324a;border:0;font-weight:700;margin-top:10px}.secondary{background:#edf2f6;border:0;font-weight:700}.danger{background:#fff0f0;color:#9b2525;border:0;font-weight:700}
 .result{background:#e9f5ec;border-radius:14px;padding:13px;margin-top:12px}.result strong{font-size:22px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px 5px;border-bottom:1px solid #e4e9ed;text-align:center}th{font-size:11px}.scroll{overflow:auto}.muted{font-size:12px;color:#647789}.badge{display:inline-block;padding:5px 8px;border-radius:20px;background:#eaf1f6;font-size:11px}
+
+.lock-overlay{position:fixed;inset:0;background:#eef3f7;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.lock-box{width:min(420px,100%);background:#fff;border-radius:22px;padding:22px;box-shadow:0 8px 30px #0002;text-align:center}.lock-box h2{margin:0 0 8px}.lock-box p{font-size:13px;color:#647789}.lock-box input{margin-top:8px}.lock-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.mini-danger{background:#fff0f0;color:#9b2525;border:0;font-weight:700}.delete-row{width:auto;height:34px;padding:0 9px;border:0;background:#fff0f0;color:#9b2525;font-size:13px}.extra-total{background:#fff7e6;border:2px solid #f0c36d;border-radius:14px;padding:13px;margin-top:10px;text-align:center}.extra-total strong{font-size:24px}
 </style>
 </head>
 <body>
+<div id="lockOverlay" class="lock-overlay" style="display:none"><div class="lock-box"><div style="font-size:42px">🔐</div><h2>Meu Ponto protegido</h2><p>Digite sua senha para acessar os registros.</p><input id="unlockPin" type="password" inputmode="numeric" maxlength="8" placeholder="Senha / PIN"><div class="lock-actions"><button class="primary" onclick="desbloquearPorSenha()">🔓 Entrar</button><button class="secondary" id="btnBiometria" onclick="desbloquearBiometria()">👆 Biometria</button></div><div id="lockMsg" class="muted" style="margin-top:10px"></div></div></div>
 <header><main style="padding:0"><h1>📋 Meu Ponto</h1><div class="sub">Controle simples • funciona no celular • sem macro</div><div id="statusRede" style="margin-top:8px;font-size:12px;font-weight:700">🟢 ONLINE</div></main></header>
 <main>
+<div class="card"><b>🔐 Segurança</b><div class="muted" style="margin-top:6px">Proteja o acesso ao Meu Ponto com senha e, quando disponível no aparelho, biometria.</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="definirSenha()">🔑 Definir / alterar senha</button><button class="secondary" onclick="ativarBiometria()">👆 Ativar biometria</button></div><button class="mini-danger" style="width:100%;height:42px;margin-top:10px;border-radius:12px" onclick="bloquearAgora()">🔒 Bloquear agora</button></div>
 <div class="card">
 <label>FUNCIONÁRIO</label><input id="nome" placeholder="Digite o nome">
 <label>MATRÍCULA</label><input id="mat" placeholder="Digite a matrícula">
@@ -46,8 +50,8 @@ label{font-size:12px;font-weight:700;display:block;margin:8px 0 5px}input,select
 <button class="primary" onclick="registrar()">💾 REGISTRAR PONTO</button>
 <button class="share" onclick="compartilharApp()">📤 COMPARTILHAR MEU PONTO</button>
 </div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>📅 Histórico</b><span class="badge" id="qtd">0 registros</span></div><div class="scroll" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Intervalo</th><th>Saída</th><th>Horas</th><th>Extra</th></tr></thead><tbody id="historico"></tbody></table></div><div class="row" style="margin-top:10px"><button class="secondary" onclick="exportar()">⬇️ Exportar CSV</button><button class="danger" onclick="limparHistorico()">🗑️ Apagar histórico</button></div></div>
-<div class="card"><b>📊 Resumo</b><div class="row3" style="margin-top:10px;text-align:center"><div><div class="muted">Dias</div><b id="dias">0</b></div><div><div class="muted">Horas</div><b id="totalHoras">00:00</b></div><div><div class="muted">Extras</div><b id="totalExtra">00:00</b></div></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>📅 Histórico</b><span class="badge" id="qtd">0 registros</span></div><div class="scroll" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Intervalo</th><th>Saída</th><th>Horas</th><th>Extra</th><th>Excluir</th></tr></thead><tbody id="historico"></tbody></table></div><div class="row" style="margin-top:10px"><button class="secondary" onclick="exportar()">⬇️ Exportar CSV</button><button class="danger" onclick="limparHistorico()">🗑️ Apagar histórico</button></div></div>
+<div class="card"><b>📊 Resumo</b><div class="row3" style="margin-top:10px;text-align:center"><div><div class="muted">Dias</div><b id="dias">0</b></div><div><div class="muted">Horas</div><b id="totalHoras">00:00</b></div><div><div class="muted">Extras</div><b id="totalExtra">00:00</b></div></div><div class="extra-total"><div class="muted">⏱️ SOMA DAS HORAS EXTRAS</div><strong id="totalExtraDestaque">00:00</strong></div></div>
 </main>
 <script>
 const KEY='meu_ponto_v2';
@@ -91,6 +95,49 @@ function atualizarStatusTurno(){
   if(p) el.textContent='🟢 Turno em andamento • Entrada: '+p.e+' • '+(p.turno==='manha'?'MANHÃ':'TARDE');
   else el.textContent='Nenhum turno em andamento.';
 }
+
+const PIN_KEY='meu_ponto_pin_v1', BIO_KEY='meu_ponto_biometria_v1', LOCK_KEY='meu_ponto_bloqueado_v1';
+function hasPin(){return !!localStorage.getItem(PIN_KEY)}
+function isLocked(){return localStorage.getItem(LOCK_KEY)==='1'}
+function setLock(v){localStorage.setItem(LOCK_KEY,v?'1':'0')}
+function atualizarSeguranca(){
+  const ov=$('lockOverlay'); if(!ov)return;
+  ov.style.display=isLocked()?'flex':'none';
+  $('btnBiometria').style.display=(window.PublicKeyCredential&&navigator.credentials)?'block':'none';
+}
+function definirSenha(){
+  const atual=localStorage.getItem(PIN_KEY);
+  if(atual){const a=prompt('Digite a senha atual:');if(a!==atual){alert('Senha atual incorreta.');return}}
+  const nova=prompt('Crie uma senha numérica de 4 a 8 dígitos:');
+  if(!nova||!/^[0-9]{4,8}$/.test(nova)){alert('Use somente 4 a 8 números.');return}
+  const conf=prompt('Confirme a nova senha:');
+  if(nova!==conf){alert('As senhas não conferem.');return}
+  localStorage.setItem(PIN_KEY,nova);setLock(false);alert('Senha definida com sucesso.');
+}
+function desbloquearPorSenha(){
+  const pin=$('unlockPin').value;
+  if(pin===localStorage.getItem(PIN_KEY)){setLock(false);$('unlockPin').value='';$('lockMsg').textContent='';atualizarSeguranca()}
+  else $('lockMsg').textContent='Senha incorreta.';
+}
+function bloquearAgora(){if(!hasPin()){definirSenha();if(!hasPin())return}setLock(true);atualizarSeguranca()}
+function randomBytes(n){const a=new Uint8Array(n);crypto.getRandomValues(a);return a}
+async function ativarBiometria(){
+  if(!window.PublicKeyCredential||!navigator.credentials){alert('A biometria não está disponível neste aparelho/navegador. Use a senha.');return}
+  try{
+    const cred=await navigator.credentials.create({publicKey:{challenge:randomBytes(32),rp:{name:'Meu Ponto'},user:{id:randomBytes(16),name:'meu-ponto-local',displayName:'Meu Ponto'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000,attestation:'none'}});
+    if(cred){localStorage.setItem(BIO_KEY,cred.id);alert('Biometria ativada neste celular.');}
+  }catch(e){alert('Não foi possível ativar a biometria. Verifique se há digital/rosto configurado no celular.');}
+}
+async function desbloquearBiometria(){
+  const id=localStorage.getItem(BIO_KEY);
+  if(!id){alert('A biometria ainda não foi ativada. Primeiro toque em “Ativar biometria”.');return}
+  try{
+    const raw=Uint8Array.from(atob(id.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+    await navigator.credentials.get({publicKey:{challenge:randomBytes(32),allowCredentials:[{type:'public-key',id:raw}],userVerification:'required',timeout:60000}});
+    setLock(false);$('lockMsg').textContent='';atualizarSeguranca();
+  }catch(e){$('lockMsg').textContent='Biometria não reconhecida. Use a senha.';}
+}
+
 function atualizarStatusRede(){
   const el=$('statusRede'); if(!el)return;
   el.textContent=navigator.onLine?'🟢 ONLINE':'🔴 OFFLINE — dados salvos neste celular';
@@ -153,14 +200,20 @@ function registrar(){
 
 function render(){
   let tb=$('historico');tb.innerHTML='';
-  dados.slice().reverse().forEach(x=>{let tr=document.createElement('tr');tr.innerHTML=`<td>${x.data.split('-').reverse().join('/')}</td><td>${x.turno}</td><td>${x.e}</td><td>${x.al&&x.re?x.al+'–'+x.re:'—'}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td>`;tb.appendChild(tr)});
-  $('qtd').textContent=dados.length+' registro'+(dados.length===1?'':'s');$('dias').textContent=dados.length;$('totalHoras').textContent=fmt(dados.reduce((a,x)=>a+x.total,0));$('totalExtra').textContent=fmt(dados.reduce((a,x)=>a+x.extra,0));
+  dados.slice().reverse().forEach((x,idx)=>{let realIndex=dados.length-1-idx;let tr=document.createElement('tr');tr.innerHTML=`<td>${x.data.split('-').reverse().join('/')}</td><td>${x.turno}</td><td>${x.e}</td><td>${x.al&&x.re?x.al+'–'+x.re:'—'}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td><td><button class="delete-row" onclick="excluirRegistro(${realIndex})">🗑️</button></td>`;tb.appendChild(tr)});
+  $('qtd').textContent=dados.length+' registro'+(dados.length===1?'':'s');$('dias').textContent=dados.length;$('totalHoras').textContent=fmt(dados.reduce((a,x)=>a+x.total,0));let extraTotal=dados.reduce((a,x)=>a+x.extra,0);$('totalExtra').textContent=fmt(extraTotal);$('totalExtraDestaque').textContent=fmt(extraTotal);
 }
+function excluirRegistro(index){
+  const x=dados[index];
+  if(!x)return;
+  if(confirm('Excluir o registro de '+x.data.split('-').reverse().join('/')+'?')){dados.splice(index,1);localStorage.setItem(KEY,JSON.stringify(dados));render();}
+}
+
 function exportar(){if(!dados.length){alert('Não há registros para exportar.');return}let csv='Data;Funcionário;Matrícula;Turno;Entrada;Saída intervalo;Retorno;Saída;Horas trabalhadas;Hora extra;Observação\n';dados.forEach(x=>csv+=`${x.data};"${x.nome}";"${x.mat}";${x.turno};${x.e};${x.al||''};${x.re||''};${x.s};${fmt(x.total)};${fmt(x.extra)};"${x.obs||''}"\n`);let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico_ponto.csv';a.click();URL.revokeObjectURL(a.href)}
 function limparHistorico(){if(confirm('Apagar todos os registros deste celular?')){dados=[];localStorage.removeItem(KEY);render()}}
 async function compartilharApp(){const url='https://jcalves1972.github.io/meu-ponto/';try{if(navigator.share){await navigator.share({title:'Meu Ponto',text:'Acesse o aplicativo Meu Ponto:',url})}else if(navigator.clipboard){await navigator.clipboard.writeText(url);alert('Link copiado! Agora é só colar no WhatsApp.')}else{prompt('Copie o link do Meu Ponto:',url)}}catch(e){}}
 
-atualizarStatusRede();atualizarStatusTurno();render();
+atualizarStatusRede();atualizarStatusTurno();render();atualizarSeguranca();
 </script>
 <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script>
 </body></html>
