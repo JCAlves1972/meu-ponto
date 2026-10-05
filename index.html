@@ -1,67 +1,77 @@
 <!doctype html><html lang="pt-BR"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#123b5d"><link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png"><title>Meu Ponto</title>
+<meta name="theme-color" content="#123b5d"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">
+<title>Meu Ponto</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#eef3f7;font:14px Arial;color:#17324a}header{background:#123b5d;color:white;padding:18px}main{max-width:520px;margin:auto;padding:12px}.card{background:white;padding:14px;border-radius:16px;margin:12px 0;box-shadow:0 2px 8px #0001}h1{margin:0}label{display:block;font-size:12px;font-weight:bold;margin:9px 0 4px}input,button{width:100%;height:46px;border:1px solid #ccd7df;border-radius:11px;padding:8px;font-size:15px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{background:#1d6fa5;color:white;border:0;font-weight:bold;margin-top:10px}.sec{background:#edf3f7;font-weight:bold}.on{background:#dff1fc;border:2px solid #1d6fa5}.status{padding:10px;background:#edf7ee;border-radius:10px;margin-top:9px;font-weight:bold}.total{font-size:21px;font-weight:bold}table{width:100%;font-size:11px;border-collapse:collapse}td,th{padding:6px 3px;border-bottom:1px solid #ddd;text-align:center}.scroll{overflow:auto}.del{width:35px;height:32px;padding:0;color:#a00}
+*{box-sizing:border-box}body{margin:0;background:#eef3f7;font:14px Arial;color:#17324a}header{background:#123b5d;color:#fff;padding:18px}main{max-width:520px;margin:auto;padding:12px}.card{background:#fff;padding:14px;border-radius:16px;margin:12px 0;box-shadow:0 2px 8px #0001}h1{margin:0}label{display:block;font-size:12px;font-weight:bold;margin:8px 0 4px}input,button{width:100%;height:45px;border:1px solid #ccd7df;border-radius:11px;padding:7px;font-size:15px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{background:#1d6fa5;color:#fff;border:0;font-weight:bold;margin-top:9px}.sec{background:#edf3f7;font-weight:bold}.on{background:#dff1fc;border:2px solid #1d6fa5}.status{padding:10px;background:#edf7ee;border-radius:10px;margin-top:9px;font-weight:bold}.total{font-size:21px;font-weight:bold}table{width:100%;font-size:11px;border-collapse:collapse}td,th{padding:6px 3px;border-bottom:1px solid #ddd;text-align:center}.scroll{overflow:auto}.del{width:34px;height:30px;padding:0;color:#a00}.lock{position:fixed;inset:0;background:#eef3f7;z-index:99;display:flex;align-items:center;justify-content:center;padding:18px}.box{background:#fff;padding:22px;border-radius:20px;width:100%;max-width:380px;text-align:center;box-shadow:0 5px 25px #0002}
 </style></head><body>
-<header><h1>📋 Meu Ponto</h1><div id="rede">🟢 ONLINE</div></header>
-<main>
+
+<div id="lock" class="lock" style="display:none"><div class="box">
+<h2>🔐 Meu Ponto</h2><p>Aplicativo protegido</p>
+<input id="pin" type="password" inputmode="numeric" placeholder="Digite sua senha">
+<button class="btn" onclick="entrarSenha()">🔓 ENTRAR</button>
+<button id="bio" class="btn" onclick="entrarBio()">👆 USAR DIGITAL</button>
+<button class="sec" style="margin-top:9px" onclick="novaSenha()">🔑 DEFINIR / ALTERAR SENHA</button>
+<div id="msg" style="margin-top:9px;color:#a00"></div>
+</div></div>
+
+<header><h1>📋 Meu Ponto</h1><div id="rede">🟢 ONLINE</div></header><main>
+
+<div class="card"><b>🔐 Segurança</b>
+<button class="sec" onclick="novaSenha()">🔑 Definir / alterar senha</button>
+<button class="sec" onclick="ativarBio()" style="margin-top:8px">👆 Ativar digital</button>
+<button class="sec" onclick="bloquear()" style="margin-top:8px">🔒 Bloquear agora</button>
+</div>
 
 <div class="card">
 <label>FUNCIONÁRIO</label><input id="nome" placeholder="Nome">
 <label>CPF</label><input id="cpf" inputmode="numeric" maxlength="14" placeholder="CPF">
 <div class="row"><div><label>DATA</label><input id="data" type="date"></div><div><label>JORNADA</label><input value="09:48" disabled></div></div>
-
-<label>TURNO</label>
-<div class="row">
+<label>TURNO</label><div class="row">
 <button id="m" class="sec" onclick="turno('M')">☀️ MANHÃ<br>07:00</button>
-<button id="t" class="sec" onclick="turno('T')">🌙 TARDE<br>16:49</button>
-</div>
-
+<button id="t" class="sec" onclick="turno('T')">🌙 TARDE<br>16:49</button></div>
 <div id="st" class="status">Nenhum turno em andamento.</div>
-
-<div class="row">
-<button class="btn" onclick="entradaAgora()">🟢 ENTRADA DO TURNO</button>
-<button class="btn" onclick="saidaAgora()">🔴 SAÍDA DO TURNO</button>
-</div>
-
-<div class="row"><div><label>ENTRADA</label><input id="e" type="time"></div><div><label>SAÍDA FINAL</label><input id="s" type="time"></div></div>
+<div class="row"><button class="btn" onclick="entradaAgora()">🟢 ENTRADA</button><button class="btn" onclick="saidaAgora()">🔴 SAÍDA</button></div>
+<div class="row"><div><label>ENTRADA</label><input id="e" type="time"></div><div><label>SAÍDA</label><input id="s" type="time"></div></div>
 <div class="row"><div><label>SAÍDA INTERVALO</label><input id="a" type="time"></div><div><label>RETORNO</label><input id="r" type="time"></div></div>
-
-<div class="status">Horas trabalhadas: <span id="horas" class="total">--:--</span><br>Hora extra: <b id="extra">--:--</b></div>
+<div class="status">Horas: <span id="horas" class="total">--:--</span><br>Extra: <b id="extra">--:--</b></div>
 <button class="btn" onclick="manual()">💾 REGISTRAR PONTO</button>
 </div>
 
-<div class="card">
-<b>📅 Histórico</b>
-<div class="scroll"><table><thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Saída</th><th>Horas</th><th>Extra</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
-<div class="status">⏱️ SOMA DAS HORAS EXTRAS: <span id="soma" class="total">00:00</span></div>
-</div>
+<div class="card"><b>📅 Histórico</b><div class="scroll"><table><thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Saída</th><th>Horas</th><th>Extra</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
+<div class="status">⏱️ SOMA DAS HORAS EXTRAS: <span id="soma" class="total">00:00</span></div></div>
 
 </main><script>
-const K="mp_dados",P="mp_aberto";let D=JSON.parse(localStorage.getItem(K)||"[]"),T="";
+const K="mp_dados",P="mp_aberto",PK="mp_pin",BK="mp_bio";let D=JSON.parse(localStorage.getItem(K)||"[]"),T="";
 const q=x=>document.getElementById(x);
 function hoje(){let d=new Date;return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
 q("data").value=hoje();
 function hora(){let d=new Date;return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
-function mn(x){if(!x)return null;let[h,m]=x.split(":").map(Number);return h*60+m}
-function dur(x,y){x=mn(x);y=mn(y);if(x==null||y==null)return 0;if(y<x)y+=1440;return y-x}
+function mn(x){if(!x)return 0;let[h,m]=x.split(":").map(Number);return h*60+m}
+function dur(x,y){x=mn(x);y=mn(y);if(y<x)y+=1440;return y-x}
 function fmt(n){n=Math.max(0,Math.round(n));return`${String(Math.floor(n/60)).padStart(2,"0")}:${String(n%60).padStart(2,"0")}`}
-function turno(x){T=x;q("m").classList.toggle("on",x=="M");q("t").classList.toggle("on",x=="T");q("a").value=x=="M"?"11:00":"19:00";q("r").value=x=="M"?"12:00":"20:00";calc()}
-function calc(){if(!q("e").value||!q("s").value){q("horas").textContent=q("extra").textContent="--:--";return}let z=dur(q("e").value,q("a").value)+dur(q("r").value,q("s").value);q("horas").textContent=fmt(z);q("extra").textContent=fmt(Math.max(0,z-588))}
+function turno(x){T=x;q("m").classList.toggle("on",x=="M");q("t").classList.toggle("on",x=="T");q("a").value=x=="M"?"11:00":"19:00";q("r").value=x=="M"?"12:00":"20:00"}
+function calc(){if(!q("e").value||!q("s").value)return;q("horas").textContent=fmt(dur(q("e").value,q("a").value)+dur(q("r").value,q("s").value));q("extra").textContent=fmt(Math.max(0,dur(q("e").value,q("a").value)+dur(q("r").value,q("s").value)-588))}
 ["e","s","a","r"].forEach(x=>q(x).onchange=calc);
 q("cpf").oninput=function(){let v=this.value.replace(/\D/g,"").slice(0,11);if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d+)/,"$1.$2.$3-$4");else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d+)/,"$1.$2.$3");else if(v.length>3)v=v.replace(/(\d{3})(\d+)/,"$1.$2");this.value=v}
-function aberto(){try{return JSON.parse(localStorage.getItem(P))}catch{return null}}
+function aberto(){return JSON.parse(localStorage.getItem(P)||"null")}
 function status(){let p=aberto();q("st").textContent=p?`🟢 Entrada guardada: ${p.e} • ${p.T=="M"?"MANHÃ":"TARDE"}`:"Nenhum turno em andamento."}
-function entradaAgora(){if(aberto())return alert("Já existe uma entrada guardada.");if(!q("nome").value||!q("cpf").value)return alert("Preencha nome e CPF.");if(!T)return alert("Selecione MANHÃ ou TARDE.");let p={nome:q("nome").value,cpf:q("cpf").value,data:q("data").value,T,e:hora(),a:q("a").value,r:q("r").value};localStorage.setItem(P,JSON.stringify(p));q("e").value=p.e;status();alert("Entrada "+p.e+" guardada com sucesso. Pode fechar o aplicativo.")}
+function entradaAgora(){if(aberto())return alert("Já existe uma entrada guardada.");if(!q("nome").value||!q("cpf").value)return alert("Preencha nome e CPF.");if(!T)return alert("Escolha MANHÃ ou TARDE.");let p={nome:q("nome").value,cpf:q("cpf").value,data:q("data").value,T,e:hora(),a:q("a").value,r:q("r").value};localStorage.setItem(P,JSON.stringify(p));q("e").value=p.e;status();alert("Entrada "+p.e+" guardada.")}
 function salvar(p,s){let total=dur(p.e,p.a)+dur(p.r,s);D.push({...p,s,total,extra:Math.max(0,total-588)});localStorage.setItem(K,JSON.stringify(D));render()}
-function saidaAgora(){let p=aberto();if(!p)return alert("Nenhuma entrada guardada.");let s=hora();salvar(p,s);localStorage.removeItem(P);q("e").value=p.e;q("s").value=s;calc();status();alert(`Saída ${s} registrada. Entrada ${p.e} recuperada automaticamente.`)}
-function manual(){if(!q("nome").value||!q("cpf").value||!q("e").value||!q("s").value)return alert("Preencha os dados e horários.");let p={nome:q("nome").value,cpf:q("cpf").value,data:q("data").value,T:T||"-",e:q("e").value,a:q("a").value,r:q("r").value};salvar(p,q("s").value);localStorage.removeItem(P);status();alert("Ponto registrado.")}
+function saidaAgora(){let p=aberto();if(!p)return alert("Nenhuma entrada guardada.");let s=hora();salvar(p,s);localStorage.removeItem(P);q("e").value=p.e;q("s").value=s;calc();status();alert("Saída registrada. Entrada recuperada automaticamente.")}
+function manual(){if(!q("nome").value||!q("cpf").value||!q("e").value||!q("s").value)return alert("Preencha os dados.");let p={nome:q("nome").value,cpf:q("cpf").value,data:q("data").value,T:T||"-",e:q("e").value,a:q("a").value,r:q("r").value};salvar(p,q("s").value);localStorage.removeItem(P);status();alert("Ponto registrado.")}
 function excluir(i){if(confirm("Excluir este registro?")){D.splice(i,1);localStorage.setItem(K,JSON.stringify(D));render()}}
-function render(){q("hist").innerHTML="";D.slice().reverse().forEach((x,j)=>{let i=D.length-1-j;q("hist").innerHTML+=`<tr><td>${x.data.split("-").reverse().join("/")}</td><td>${x.T=="M"?"Manhã":x.T=="T"?"Tarde":"-"}</td><td>${x.e}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td><td><button class="del" onclick="excluir(${i})">🗑️</button></td></tr>`});q("soma").textContent=fmt(D.reduce((n,x)=>n+(x.extra||0),0))}
+function render(){q("hist").innerHTML="";D.slice().reverse().forEach((x,j)=>{let i=D.length-1-j;q("hist").innerHTML+=`<tr><td>${x.data.split("-").reverse().join("/")}</td><td>${x.T}</td><td>${x.e}</td><td>${x.s}</td><td>${fmt(x.total)}</td><td>${fmt(x.extra)}</td><td><button class="del" onclick="excluir(${i})">🗑️</button></td></tr>`});q("soma").textContent=fmt(D.reduce((n,x)=>n+(x.extra||0),0))}
+async function hash(s){let b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return btoa(String.fromCharCode(...new Uint8Array(b)))}
+async function novaSenha(){let p=localStorage.getItem(PK);if(p&&!await confSenha())return;let n=prompt("Crie uma senha de 4 a 8 números:");if(!/^\d{4,8}$/.test(n||""))return alert("Use de 4 a 8 números.");let c=prompt("Confirme a senha:");if(n!==c)return alert("Senhas diferentes.");localStorage.setItem(PK,await hash(n));alert("Senha definida com sucesso.");}
+async function confSenha(){let n=prompt("Digite a senha atual:");return await hash(n||"")===localStorage.getItem(PK)}
+async function entrarSenha(){if(await hash(q("pin").value||"")===localStorage.getItem(PK)){q("lock").style.display="none";q("pin").value=""}else q("msg").textContent="Senha incorreta."}
+function bloquear(){if(!localStorage.getItem(PK))return novaSenha();q("lock").style.display="flex"}
+async function ativarBio(){if(!window.PublicKeyCredential)return alert("A biometria não está disponível neste navegador.");try{let c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:"Meu Ponto"},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:"meu-ponto",displayName:"Meu Ponto"},pubKeyCredParams:[{type:"public-key",alg:-7}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"},attestation:"none"}});localStorage.setItem(BK,c.id);alert("Digital ativada neste celular.")}catch(e){alert("Não foi possível ativar a digital. Verifique se há digital/rosto configurado no Android.")}}
+async function entrarBio(){let id=localStorage.getItem(BK);if(!id)return alert("Primeiro ative a digital.");try{let raw=Uint8Array.from(atob(id.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:"public-key",id:raw}],userVerification:"required"}});q("lock").style.display="none"}catch(e){q("msg").textContent="Digital não reconhecida. Use a senha."}}
 function restaurar(){let p=aberto();if(!p)return status();q("nome").value=p.nome;q("cpf").value=p.cpf;q("data").value=p.data;q("e").value=p.e;turno(p.T);q("a").value=p.a;q("r").value=p.r;status()}
 function rede(){q("rede").textContent=navigator.onLine?"🟢 ONLINE":"🔴 OFFLINE"}
 ononline=onoffline=rede;rede();render();restaurar();
+if(localStorage.getItem(PK))q("lock").style.display="flex";
 if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
 </script></body></html>
