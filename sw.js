@@ -1,4 +1,4 @@
-const CACHE = "meu-ponto-offline-v6";
+const CACHE = meu-ponto-offline-v7
 const CORE = [
   "./",
   "./index.html",
