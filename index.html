@@ -70,6 +70,6 @@ async function entrarBio(){let id=localStorage.getItem(BK);if(!id)return alert("
 function restaurar(){let p=aberto();if(!p)return status();q("nome").value=p.nome;q("cpf").value=p.cpf;q("data").value=p.data;q("e").value=p.e;turno(p.T);q("a").value=p.a;q("r").value=p.r;status()}
 function rede(){q("rede").textContent=navigator.onLine?"🟢 ONLINE":"🔴 OFFLINE"}
 ononline=onoffline=rede;rede();render();restaurar();
-if(localStorage.getItem(PK))q("lock").style.display="flex";
+if(localStorage.getItem(PK))q("lock").style.display="flex";else novaSenha();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
 </script></body></html>
