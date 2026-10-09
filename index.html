@@ -74,18 +74,84 @@ function rede(){q("rede").textContent=navigator.onLine?"🟢 ONLINE":"🔴 OFFLI
 ononline=onoffline=rede;rede();render();restaurar();
 if(localStorage.getItem(PK))q("lock").style.display="flex";else novaSenha();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
-function exportarCSV(){
+async function exportarCSV(){
 if(!D.length)return alert("Histórico vazio.");
+
 let linhas=[["Data","Funcionário","CPF","Turno","Entrada","Saída","Horas","Extras"]];
 D.forEach(x=>linhas.push([x.data,x.nome,x.cpf,x.T,x.e,x.s,fmt(x.total),fmt(x.extra)]));
+
 let csv="\uFEFF"+linhas.map(l=>l.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+let blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+let nome="Historico_Meu_Ponto.csv";
+
+try{
+if(window.showSaveFilePicker){
+let h=await window.showSaveFilePicker({
+suggestedName:nome,
+types:[{description:"Planilha Excel (CSV)",accept:{"text/csv":[".csv"]}}]
+});
+let w=await h.createWritable();
+await w.write(blob);
+await w.close();
+alert("Histórico salvo com sucesso!");
+}else{
 let a=document.createElement("a");
-a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-a.download="historico-meu-ponto.csv";
+a.href=URL.createObjectURL(blob);
+a.download=nome;
 a.click();
-URL.revokeObjectURL(a.href);
+setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+alert("Arquivo exportado. Verifique a pasta Downloads.");
 }
+}catch(e){
+if(e.name!=="AbortError")alert("Não foi possível salvar. Tente novamente.");
+}
+}
+
 function salvarPDF(){
 if(!D.length)return alert("Histórico vazio.");
-window.print();
-}</script></body></html>
+
+let linhas=D.map(x=>`
+<tr>
+<td>${escPDF(x.data)}</td>
+<td>${escPDF(x.T)}</td>
+<td>${escPDF(x.e)}</td>
+<td>${escPDF(x.s)}</td>
+<td>${escPDF(fmt(x.total))}</td>
+<td>${escPDF(fmt(x.extra))}</td>
+</tr>`).join("");
+
+let w=window.open("","_blank");
+if(!w)return alert("Permita abrir janelas para imprimir o histórico.");
+
+w.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Histórico Meu Ponto</title>
+<style>
+body{font-family:Arial,sans-serif;padding:20px;color:#222}
+h2{text-align:center}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #999;padding:8px;text-align:center}
+th{background:#eee}
+p{text-align:right;font-weight:bold}
+@media print{button{display:none}}
+</style>
+</head>
+<body>
+<h2>HISTÓRICO — MEU PONTO</h2>
+<table>
+<thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Saída</th><th>Horas</th><th>Extras</th></tr></thead>
+<tbody>${linhas}</tbody>
+</table>
+<p>Soma das horas extras: ${escPDF(q("soma")?.textContent||"00:00")}</p>
+<button onclick="window.print()">SALVAR EM PDF / IMPRIMIR</button>
+</body>
+</html>`);
+w.document.close();
+}
+
+function escPDF(v){
+return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+</script></body></html>
