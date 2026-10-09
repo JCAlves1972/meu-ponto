@@ -39,7 +39,9 @@
 </div>
 
 <div class="card"><b>📅 Histórico</b><div class="scroll"><table><thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Saída</th><th>Horas</th><th>Extra</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
-<div class="status">⏱️ SOMA DAS HORAS EXTRAS: <span id="soma" class="total">00:00</span></div></div>
+<button class="btn" onclick="exportarCSV()">📥 EXPORTAR HISTÓRICO (EXCEL)</button>
+<button class="sec" style="margin-top:8px" onclick="salvarPDF()">🖨️ SALVAR HISTÓRICO EM PDF</button>
+  <div class="status">⏱️ SOMA DAS HORAS EXTRAS: <span id="soma" class="total">00:00</span></div></div>
 
 </main><script>
 const K="mp_dados",P="mp_aberto",PK="mp_pin",BK="mp_bio";let D=JSON.parse(localStorage.getItem(K)||"[]"),T="";
@@ -72,4 +74,18 @@ function rede(){q("rede").textContent=navigator.onLine?"🟢 ONLINE":"🔴 OFFLI
 ononline=onoffline=rede;rede();render();restaurar();
 if(localStorage.getItem(PK))q("lock").style.display="flex";else novaSenha();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
-</script></body></html>
+function exportarCSV(){
+if(!D.length)return alert("Histórico vazio.");
+let linhas=[["Data","Funcionário","CPF","Turno","Entrada","Saída","Horas","Extras"]];
+D.forEach(x=>linhas.push([x.data,x.nome,x.cpf,x.T,x.e,x.s,fmt(x.total),fmt(x.extra)]));
+let csv="\uFEFF"+linhas.map(l=>l.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+let a=document.createElement("a");
+a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+a.download="historico-meu-ponto.csv";
+a.click();
+URL.revokeObjectURL(a.href);
+}
+function salvarPDF(){
+if(!D.length)return alert("Histórico vazio.");
+window.print();
+}</script></body></html>
